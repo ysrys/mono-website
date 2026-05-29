@@ -1,705 +1,1243 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="scroll-smooth">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Monoarch - Home</title>
-    <link rel="icon" type="image/png" sizes="16x16" href="/assets/favicon-16x16.png">
-    <link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon-32x32.png">
-    <link rel="icon" type="image/png" sizes="48x48" href="/assets/favicon-48x48.png">
-    <link rel="icon" type="image/png" sizes="192x192" href="/assets/android-chrome-192x192.png">
-    <link rel="icon" type="image/png" sizes="512x512" href="/assets/android-chrome-512x512.png">
-    <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --color-primary: #000000;
-            --color-secondary: #111111;
-            --color-accent: #ffffff;
-            --color-text: #ffffff;
-            --color-text-muted: rgba(255, 255, 255, 0.7);
-            --font-mono: "Space Mono", monospace;
-            --menu-width: 200px;
-            --menu-collapsed-width: 60px;
-            --transition-slow: 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-        }
+    <title>Monoarch Studio</title>
+    
+    <!-- Fonts: Playfair Display for headings, Inter for body -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500&family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+    
+    <!-- Icons MUST be loaded here -->
+    <script src="https://unpkg.com/lucide@latest"></script>
 
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+    <!-- Three.js & Swiper -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@10/swiper-bundle.min.css" />
+    <script src="https://cdn.jsdelivr.net/npm/swiper@10/swiper-bundle.min.js"></script>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'arch-bg': '#0a0a0a',
+                        'arch-surface': '#141414',
+                        'arch-accent': '#c28e5e', /* Copper/Bronze */
+                        'arch-text': '#e5e5e5',
+                        'arch-muted': '#888888'
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        serif: ['Playfair Display', 'serif'],
+                    },
+                    spacing: {
+                        '128': '32rem',
+                    }
+                }
+            }
         }
+    </script>
+
+    <style>
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #0a0a0a; }
+        ::-webkit-scrollbar-thumb { background: #333; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #c28e5e; }
+
+        ::selection { background: #c28e5e; color: #000; }
 
         body {
-            font-family: var(--font-mono);
-            overflow: hidden;
-            cursor: grab;
-            background-color: var(--color-primary);
-            color: var(--color-text);
-        }
-
-        body:active { cursor: grabbing; }
-
-        .left-menu {
-            position: fixed;
-            left: 0;
-            top: 0;
-            height: 100vh;
-            width: var(--menu-collapsed-width);
-            background-color: var(--color-secondary);
-            z-index: 100;
+            background-color: #0a0a0a;
+            color: #e5e5e5;
+            overflow-x: hidden;
+            min-height: 100vh;
             display: flex;
             flex-direction: column;
-            justify-content: space-between;
-            transition: width var(--transition-slow);
-            overflow: hidden;
-            border-right: 1px solid #333;
+            cursor: none; 
         }
 
-        .left-menu.expanded {
-            width: var(--menu-width);
-        }
-
-        body.menu-expanded .page-container {
-            left: var(--menu-width);
-        }
-
-        .page-container {
+        /* Custom Fluid Cursor & Interactive States */
+        #cursor-main {
             position: fixed;
-            top: 0;
-            left: var(--menu-collapsed-width);
-            right: 0;
-            bottom: 0;
-            transition: left var(--transition-slow);
-        }
-
-        .left-menu-top {
-            position: absolute;
-            top: 1.5rem;
-            left: 0;
-            width: 100%;
+            top: 0; left: 0;
+            width: 30px; height: 30px;
+            border: 2px solid #c28e5e;
+            border-radius: 50%;
+            z-index: 9999;
+            pointer-events: none;
+            transform: translate(-50%, -50%);
+            transition: width 0.3s cubic-bezier(0.16, 1, 0.3, 1), height 0.3s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.3s ease, border-radius 0.3s ease, mix-blend-mode 0.3s ease;
+            mix-blend-mode: difference;
             display: flex;
+            align-items: center;
             justify-content: center;
         }
-
-        .left-menu-middle {
-            position: absolute;
-            top: 50%;
-            left: 0;
-            width: 100%;
-            display: flex;
-            justify-content: center;
-            transform: translateY(-50%);
+        #cursor-main::after {
+            content: '';
+            width: 4px; height: 4px;
+            background: #c28e5e;
+            border-radius: 50%;
+            transition: opacity 0.3s ease;
         }
-
-        .logo {
-            font-weight: 700;
-            letter-spacing: 1px;
-            font-size: 0.7rem;
-            color: var(--color-text);
-            transform: rotate(-90deg);
-            transition: opacity 0.3s;
+        body.cursor-hover #cursor-main {
+            width: 50px; height: 50px;
+            background-color: rgba(194, 142, 94, 0.1);
+            border-color: rgba(194, 142, 94, 0.8);
+            backdrop-filter: blur(4px);
         }
-
-        .left-menu.expanded .logo {
-            opacity: 0;
-        }
-
-        .menu-btn {
-            width: 20px;
-            height: 16px;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            cursor: pointer;
-            background: transparent;
+        
+        /* New Drag Cursor Style: Split Left/Right Arrows */
+        body.cursor-drag #cursor-main {
+            width: 100px; height: 44px;
+            background-color: transparent;
             border: none;
-            padding: 0;
+            backdrop-filter: none;
+            mix-blend-mode: normal;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
-
-        .menu-btn span {
+        
+        body.cursor-drag #cursor-main::before,
+        body.cursor-drag #cursor-main::after {
+            content: '';
             display: block;
+            width: 44px; height: 44px;
+            border-radius: 50%;
+            background-color: rgba(10, 10, 10, 0.85);
+            border: 1px solid #c28e5e;
+            backdrop-filter: blur(4px);
+            background-repeat: no-repeat;
+            background-position: center;
+            background-size: 20px;
+            opacity: 1; /* Reset default opacity */
+        }
+
+        /* Left Arrow */
+        body.cursor-drag #cursor-main::before {
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23c28e5e' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m12 19-7-7 7-7'/%3E%3Cpath d='M19 12H5'/%3E%3C/svg%3E");
+        }
+
+        /* Right Arrow */
+        body.cursor-drag #cursor-main::after {
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23c28e5e' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12h14'/%3E%3Cpath d='m12 5 7 7-7 7'/%3E%3C/svg%3E");
+        }
+
+        /* Micro-interactions */
+        .btn-morph {
+            border-radius: 40px;
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .btn-morph:hover {
+            transform: scale(0.96);
+            box-shadow: 0 10px 20px rgba(194, 142, 94, 0.2);
+        }
+
+        /* Swiper Customizations */
+        .category-swiper {
             width: 100%;
-            height: 2px;
-            background-color: var(--color-text);
-            transition: transform 0.3s, opacity 0.3s;
+            padding-bottom: 60px;
+            overflow: visible;
         }
-
-        .left-menu.expanded .menu-btn span:nth-child(1) {
-            transform: translateY(7px) rotate(45deg);
+        
+        /* Overlapping and Blur Logic */
+        .swiper-slide {
+            transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+            opacity: 0.4;
+            transform: scale(0.85); /* Shrink inactive slides */
+            filter: blur(4px); /* Blur inactive slides */
+            z-index: 1;
         }
-
-        .left-menu.expanded .menu-btn span:nth-child(2) {
-            opacity: 0;
-        }
-
-        .left-menu.expanded .menu-btn span:nth-child(3) {
-            transform: translateY(-7px) rotate(-45deg);
-        }
-
-        .section-nav {
-            position: absolute;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            opacity: 0;
-            visibility: hidden;
-            transition: opacity 0.3s, visibility 0.3s;
-            display: flex;
-            flex-direction: column;
-            align-items: flex-start;
-            justify-content: center;
-            padding-left: var(--menu-collapsed-width);
-            padding-right: 1rem;
-            background-color: var(--color-secondary);
-        }
-
-        .left-menu.expanded .section-nav {
+        
+        .swiper-slide-active {
             opacity: 1;
-            visibility: visible;
+            transform: scale(1); /* Full size for active slide */
+            filter: blur(0px); /* Remove blur */
+            z-index: 10;
+            box-shadow: 0 0 40px rgba(0,0,0,0.8); /* Enhance separation */
         }
-
-        .section-nav-item {
-            color: var(--color-text-muted);
-            text-decoration: none;
-            margin: 1rem 0;
-            font-size: 0.8rem;
-            opacity: 0;
-            transition: opacity var(--transition-slow), transform var(--transition-slow), color 0.2s;
-            cursor: pointer;
-            transform: translateX(-20px);
-            display: flex;
-            align-items: center;
-            font-weight: 400;
-        }
-
-        .section-nav-item.animate-in {
+        
+        /* Subtle adjustments for immediate siblings to enhance the overlap look */
+        .swiper-slide-prev, .swiper-slide-next {
             opacity: 0.7;
-            transform: translateX(0);
+            filter: blur(2px);
+            z-index: 5;
         }
 
-        .section-nav-item:hover,
-        .section-nav-item.active {
-            opacity: 1;
-            color: var(--color-accent);
+        .swiper-pagination-bullet { background: #888888; }
+        .swiper-pagination-bullet-active { background: #c28e5e; }
+
+        /* Category Filter Transitions */
+        .category-section {
+            transition: opacity 0.5s ease, transform 0.5s ease;
         }
 
-        .section-nav-item-number {
-            font-weight: 700;
-            font-size: 0.7rem;
-            opacity: 0.6;
-            margin-right: 0.5rem;
-            min-width: 20px;
+        /* Sticky Tabs Transformation */
+        #project-tabs-wrapper {
+            transition: opacity 0.4s ease, background 0.4s ease;
+            z-index: 50;
+        }
+        
+        @media (min-width: 768px) {
+            #project-tabs-wrapper.scrolled-tabs {
+                position: fixed;
+                top: 50%;
+                left: 3vw;
+                transform: translateY(-50%);
+                align-items: flex-start;
+                margin-bottom: 0;
+                background: transparent;
+                animation: slideInLeft 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            }
+            #project-tabs-wrapper.scrolled-tabs #project-sub-tabs {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 1.25rem;
+            }
+            #project-tabs-wrapper.scrolled-tabs .project-tab {
+                font-size: 0.875rem; 
+                opacity: 0.5;
+            }
+            #project-tabs-wrapper.scrolled-tabs .project-tab.active {
+                opacity: 1;
+            }
         }
 
-        .horizontal-container {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
+        @media (max-width: 767px) {
+            #project-tabs-wrapper.scrolled-tabs {
+                position: fixed;
+                top: 70px;
+                left: 0;
+                width: 100vw;
+                background: rgba(10, 10, 10, 0.95);
+                backdrop-filter: blur(10px);
+                padding: 1rem 1.5rem;
+                flex-direction: row;
+                overflow-x: auto;
+                justify-content: flex-start;
+                margin-bottom: 0;
+                border-bottom: 1px solid rgba(255,255,255,0.05);
+                scrollbar-width: none; 
+                animation: slideInDown 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            }
+            #project-tabs-wrapper.scrolled-tabs::-webkit-scrollbar {
+                display: none;
+            }
+            #project-tabs-wrapper.scrolled-tabs #project-sub-tabs {
+                flex-wrap: nowrap;
+                gap: 1.5rem;
+            }
         }
 
-        .panels-container {
-            position: absolute;
-            top: 0;
-            left: 0;
-            height: 100%;
-            display: flex;
-            will-change: transform;
+        @keyframes slideInLeft {
+            from { opacity: 0; transform: translate(-20px, -50%); }
+            to { opacity: 1; transform: translate(0, -50%); }
+        }
+        @keyframes slideInDown {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
-        .panel {
+        /* Custom Tab Styling */
+        .project-tab {
             position: relative;
-            height: 100vh;
-            overflow: hidden;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            transition: color 0.3s ease;
+        }
+        .project-tab::after {
+            content: '';
+            position: absolute;
+            bottom: -4px;
+            left: 0;
+            width: 0;
+            height: 1px;
+            background-color: #c28e5e;
+            transition: width 0.3s ease;
+        }
+        .project-tab.active {
+            color: #c28e5e;
+        }
+        .project-tab.active::after {
+            width: 100%;
         }
 
-        .panel-content {
-            width: 90%;
-            max-width: 900px;
-            text-align: center;
+        /* Updated Project Cards (Rounding & Shadows) */
+        .project-card, .team-img-wrapper, .rounded-image { 
+            border-radius: 16px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.6);
+            overflow: hidden; 
+            perspective: 1000px;
+        }
+        
+        /* Parallax Container */
+        .parallax-wrap { overflow: hidden; position: relative; border-radius: 16px; }
+        .parallax-inner { height: 130%; width: 100%; top: -15%; position: relative; }
+
+        /* Single Page Application (SPA) routing styles */
+        .page-view {
+            display: none;
             opacity: 0;
-            transform: translateY(30px);
-            transition: opacity 0.6s ease, transform 0.6s ease;
+            flex: 1 0 auto;
+        }
+        .page-view.active {
+            display: block;
+            animation: pageFadeIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+        .page-view.fade-out {
+            display: block;
+            animation: pageFadeOut 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
         }
 
-        .panel.active .panel-content {
+        @keyframes pageFadeIn {
+            0% { opacity: 0; transform: translateY(30px) scale(0.98); }
+            100% { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        @keyframes pageFadeOut {
+            0% { opacity: 1; transform: translateY(0) scale(1); }
+            100% { opacity: 0; transform: translateY(-30px) scale(0.98); }
+        }
+
+        /* Element Reveal Animations */
+        .reveal {
+            opacity: 0;
+            transform: translateY(40px);
+            transition: all 1.2s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .reveal.active {
             opacity: 1;
             transform: translateY(0);
         }
+        .reveal-delay-1 { transition-delay: 0.15s; }
+        .reveal-delay-2 { transition-delay: 0.3s; }
+        .reveal-delay-3 { transition-delay: 0.45s; }
 
-        .chapter {
-            text-transform: uppercase;
-            margin-bottom: 3rem;
-            font-size: 0.8rem;
-            letter-spacing: 3px;
-            color: var(--color-text-muted);
-            font-weight: 700;
-        }
-
-        .title {
-            font-size: clamp(3rem, 8vw, 8rem);
-            margin-bottom: 3rem;
-            line-height: 1;
-            font-weight: 700;
-            color: var(--color-text);
-            letter-spacing: -0.02em;
-        }
-
-        .mega-text {
-            font-size: clamp(4rem, 10vw, 12rem);
-            line-height: 0.8;
-            font-weight: 700;
-            text-transform: uppercase;
-            color: var(--color-accent);
-            margin-bottom: 2rem;
-            letter-spacing: -0.05em;
-        }
-
-        .text {
-            font-size: clamp(1rem, 1.5vw, 1.2rem);
-            line-height: 1.6;
-            color: var(--color-text-muted);
-            font-weight: 400;
-            max-width: 700px;
-            margin: 0 auto;
-        }
-
-        .contact-name {
-            font-size: clamp(4rem, 12vw, 10rem);
-            color: var(--color-text);
-            margin-bottom: 3rem;
-            line-height: 0.9;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: -0.03em;
-        }
-
-        .email-wrapper {
-            display: inline-flex;
-            align-items: center;
-            gap: 1rem;
-            background-color: var(--color-secondary);
-            padding: 1rem 2rem;
-            border-radius: 0;
-            border: 1px solid #333;
-            transition: all 0.3s ease;
-        }
-
-        .email-wrapper:hover {
-            background-color: #222;
-            border-color: #555;
-            transform: translateY(-2px);
-        }
-
-        .email {
-            font-size: 1.2rem;
-            color: var(--color-text);
-            text-decoration: none;
-            transition: color 0.2s;
-            font-weight: 400;
-        }
-
-        .copy-email {
-            background: none;
-            border: none;
-            cursor: pointer;
-            color: var(--color-text);
-            opacity: 0.7;
-            padding: 0.3rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.2s ease;
-        }
-
-        .copy-email:hover {
-            opacity: 1;
-        }
-
-        .copy-tooltip {
-            position: absolute;
-            bottom: -30px;
-            left: 50%;
-            transform: translateX(-50%);
-            background-color: var(--color-accent);
-            color: var(--color-primary);
-            padding: 0.3rem 0.8rem;
-            border-radius: 0;
-            font-size: 0.7rem;
-            opacity: 0;
-            visibility: hidden;
-            transition: all 0.3s ease;
-            font-weight: 700;
-        }
-
-        .copy-tooltip.active {
-            opacity: 1;
-            visibility: visible;
-        }
-
-        .navigation {
-            position: fixed;
-            bottom: 2rem;
-            left: 50%;
-            transform: translateX(-50%);
-            display: flex;
-            align-items: center;
-            gap: 1.5rem;
-            z-index: 100;
-            color: white;
-        }
-
-        .nav-progress {
-            width: 100px;
-            height: 2px;
-            background-color: #333;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .nav-progress-fill {
-            position: absolute;
-            top: 0;
-            left: 0;
-            height: 100%;
-            width: 100%;
-            background-color: white;
-            transform-origin: left;
-            transform: scaleX(0);
+        /* Magnetic Class */
+        .magnetic {
+            display: inline-block;
+            transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
             will-change: transform;
         }
 
-        .nav-text {
-            font-size: 0.7rem;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            font-weight: 700;
+        /* Form Inputs */
+        .arch-input {
+            background: transparent;
+            border: none;
+            border-bottom: 1px solid #333;
+            border-radius: 0;
+            padding: 12px 0;
+            color: #e5e5e5;
+            width: 100%;
+            transition: border-color 0.3s ease;
         }
-
-        .panel-1 {
-            background-color: #000000;
-        }
-
-        .panel-2 {
-            background-color: #111111;
-        }
-
-        .panel-3 {
-            background-color: #1a1a1a;
-        }
-
-        .panel-4 {
-            background-color: #000000;
-        }
-
-        @media (max-width: 768px) {
-            .title {
-                font-size: clamp(2rem, 8vw, 4rem);
-            }
-
-            .mega-text {
-                font-size: clamp(3rem, 15vw, 8rem);
-            }
-
-            .contact-name {
-                font-size: clamp(2.5rem, 12vw, 6rem);
-            }
-
-            .email {
-                font-size: 1rem;
-            }
-
-            .email-wrapper {
-                padding: 0.8rem 1.5rem;
-            }
-        }
+        .arch-input:focus { outline: none; border-color: #c28e5e; }
+        
+        /* Team Cards */
+        .team-card { perspective: 1000px; }
+        .team-img-wrapper { overflow: hidden; transition: transform 0.8s cubic-bezier(0.16, 1, 0.3, 1); }
+        .team-card:hover .team-img-wrapper { transform: scale(1.03); }
+        .team-card img { transition: filter 0.8s ease; filter: grayscale(100%); }
+        .team-card:hover img { filter: grayscale(0%); }
+        
+        /* Push footer down */
+        main { flex: 1; }
     </style>
-<script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body>
-    <!-- Left Menu -->
-    <div class="left-menu">
-        <div class="left-menu-top">
-            <button class="menu-btn" aria-label="Toggle menu">
-                <span></span>
-                <span></span>
-                <span></span>
+<body class="antialiased font-sans">
+
+    <!-- Custom Cursor Elements -->
+    <div id="cursor-main" class="hidden md:flex"></div>
+
+    <!-- Navigation -->
+    <nav id="navbar" class="fixed w-full z-50 transition-all duration-700 py-8 px-6 md:px-12 bg-transparent">
+        <div class="max-w-7xl mx-auto flex justify-between items-center">
+            <!-- Logo -->
+            <a href="#home" onclick="window.appNavigate('home', event)" class="flex items-center magnetic cursor-interact">
+                <img src="https://raw.githubusercontent.com/ysrys/mono-website/refs/heads/main/LOGO%20T%20WHITE.png" alt="Monoarch Studio" class="h-7 md:h-9 object-contain">
+            </a>
+
+            <!-- Desktop Menu -->
+            <div class="hidden md:flex space-x-10 items-center">
+                <a href="#studio" onclick="window.appNavigate('studio', event)" class="nav-link magnetic cursor-interact text-sm uppercase tracking-widest text-arch-text hover:text-arch-accent transition-colors">Studio</a>
+                <a href="#projects" onclick="window.appNavigate('projects', event)" class="nav-link magnetic cursor-interact text-sm uppercase tracking-widest text-arch-text hover:text-arch-accent transition-colors">Projects</a>
+                <a href="#expertise" onclick="window.appNavigate('expertise', event)" class="nav-link magnetic cursor-interact text-sm uppercase tracking-widest text-arch-text hover:text-arch-accent transition-colors">Expertise</a>
+                <a href="#team" onclick="window.appNavigate('team', event)" class="nav-link magnetic cursor-interact text-sm uppercase tracking-widest text-arch-text hover:text-arch-accent transition-colors">Team</a>
+                <a href="#enquire" onclick="window.appNavigate('enquire', event)" class="magnetic cursor-interact btn-morph text-sm uppercase tracking-widest bg-white text-arch-bg px-6 py-3 hover:bg-arch-accent hover:text-white transition-all duration-300">Enquire</a>
+            </div>
+
+            <!-- Mobile Menu Toggle -->
+            <button id="mobile-menu-btn" class="md:hidden text-white focus:outline-none z-50 cursor-interact">
+                <i data-lucide="menu" class="w-6 h-6"></i>
             </button>
         </div>
-        <div class="left-menu-middle">
-            <div class="logo">MONOARCH</div>
-        </div>
-        <div class="section-nav">
-            <a class="section-nav-item" data-index="0">
-                <span class="section-nav-item-number">01</span>
-                <span>Home</span>
-            </a>
-            <a class="section-nav-item" data-index="1">
-                <span class="section-nav-item-number">02</span>
-                <span>About</span>
-            </a>
-            <a class="section-nav-item" data-index="2">
-                <span class="section-nav-item-number">03</span>
-                <span>Projects</span>
-            </a>
-            <a class="section-nav-item" data-index="3">
-                <span class="section-nav-item-number">04</span>
-                <span>Contact</span>
-            </a>
+    </nav>
+
+    <!-- Mobile Menu Overlay -->
+    <div id="mobile-menu" class="fixed inset-0 bg-arch-bg z-40 flex flex-col justify-center items-center opacity-0 pointer-events-none transition-opacity duration-300">
+        <div class="flex flex-col space-y-8 text-center">
+            <a href="#studio" onclick="window.appNavigate('studio', event)" class="mobile-link text-2xl font-serif text-white hover:text-arch-accent">Studio</a>
+            <a href="#projects" onclick="window.appNavigate('projects', event)" class="mobile-link text-2xl font-serif text-white hover:text-arch-accent">Projects</a>
+            <a href="#expertise" onclick="window.appNavigate('expertise', event)" class="mobile-link text-2xl font-serif text-white hover:text-arch-accent">Expertise</a>
+            <a href="#team" onclick="window.appNavigate('team', event)" class="mobile-link text-2xl font-serif text-white hover:text-arch-accent">Team</a>
+            <a href="#enquire" onclick="window.appNavigate('enquire', event)" class="mobile-link text-2xl font-serif text-arch-accent">Enquire</a>
         </div>
     </div>
 
-    <div class="page-container">
-        <div class="horizontal-container">
-            <div class="panels-container">
-                <!-- Panel 1: Home -->
-                <section class="panel panel-1" data-index="0">
-                    <div class="panel-content">
-                        <div class="chapter">WELCOME</div>
-                        <h1 class="title">MONOARCH</h1>
-                        <div class="text">
-                            <p>At Monoarch, we believe great architecture isn't just built, it's crafted. We challenge the boundaries of conventional design to create great buildings for people, now and in the future.</p>
+    <!-- MAIN CONTAINER FOR SPA PAGES -->
+    <main id="app-container">
+
+        <!-- ================= PAGE: HOME ================= -->
+        <div id="page-home" class="page-view active">
+            <section id="home-hero" class="relative h-screen flex items-center justify-start overflow-hidden">
+                <canvas id="hero-canvas" class="absolute inset-0 z-0 pointer-events-auto cursor-interact"></canvas>
+                
+                <div class="absolute inset-0 z-[5] pointer-events-none flex items-center justify-center opacity-[0.03]">
+                    <img id="hero-bg-logo" src="https://raw.githubusercontent.com/ysrys/mono-website/refs/heads/main/LOGO%20T%20WHITE.png" alt="" class="w-[80vw] md:w-[50vw] object-contain will-change-transform">
+                </div>
+
+                <div class="absolute inset-0 bg-gradient-to-r from-[#0a0a0a] via-[#0a0a0a]/50 to-transparent z-[8] pointer-events-none"></div>
+
+                <div class="relative z-10 text-left px-6 md:px-12 max-w-7xl mx-auto w-full mt-20 pointer-events-none">
+                    <p class="text-arch-accent uppercase tracking-[0.3em] text-xs mb-4 reveal">Monoarch Studio</p>
+                    <h1 class="text-4xl md:text-5xl lg:text-6xl font-serif leading-tight mb-6 text-white reveal reveal-delay-1 parallax-el" data-speed="0.1">
+                        Shaping Tomorrow's <br>
+                        <span class="italic text-gray-300">Heritage</span>
+                    </h1>
+                    <p class="text-sm md:text-base text-gray-300 max-w-lg mb-10 font-light reveal reveal-delay-2 parallax-el" data-speed="0.15">
+                        We craft spaces that transcend time. A multidisciplinary architecture and interior design studio dedicated to visionary environments.
+                    </p>
+                    <div class="reveal reveal-delay-3 pointer-events-auto">
+                        <a href="#projects" onclick="window.appNavigate('projects', event)" class="magnetic cursor-interact btn-morph inline-flex items-center space-x-3 border border-white/30 px-8 py-4 hover:border-arch-accent hover:bg-arch-accent hover:text-arch-bg transition-all duration-300 text-xs uppercase tracking-widest bg-black/20 backdrop-blur-sm group">
+                            <span>Explore Portfolio</span>
+                            <i data-lucide="arrow-right" class="w-3 h-3 transform group-hover:translate-x-2 transition-transform"></i>
+                        </a>
+                    </div>
+                </div>
+            </section>
+
+            <section class="relative py-40 px-6 md:px-12 bg-transparent overflow-hidden">
+                <div class="absolute inset-0 flex items-center justify-start pointer-events-none opacity-[0.04] z-0 -translate-x-[20%] select-none">
+                    <img src="https://raw.githubusercontent.com/ysrys/mono-website/refs/heads/main/LOGO%20T%20WHITE.png" alt="" class="h-[120%] object-contain">
+                </div>
+
+                <div class="max-w-7xl mx-auto relative z-10 flex flex-col md:flex-row">
+                    <div class="max-w-2xl text-left">
+                        <h2 class="text-xs text-arch-accent uppercase tracking-widest mb-8 reveal">Design Philosophy</h2>
+                        <h3 class="text-xl md:text-2xl font-serif mb-6 leading-relaxed reveal reveal-delay-1 text-gray-200">
+                            Architecture is the learned game, <span class="italic text-gray-400">correct and magnificent,</span> of forms assembled in the light.
+                        </h3>
+                        <p class="text-sm text-arch-muted font-light leading-loose mb-10 reveal reveal-delay-2">
+                            At Monoarch, we believe that every space has a story waiting to be told. We approach each project not just as a structural challenge, but as an opportunity to shape human experience. We strip away the superfluous to reveal the essence of a space, fostering environments that are both striking and serene.
+                        </p>
+                        <div class="reveal reveal-delay-3">
+                            <a href="#studio" onclick="window.appNavigate('studio', event)" class="cursor-interact text-xs uppercase tracking-widest border-b border-arch-accent/50 pb-1 hover:text-white hover:border-arch-accent transition-colors inline-block text-arch-muted">Discover Our Studio</a>
                         </div>
                     </div>
-                </section>
+                </div>
+            </section>
+        </div>
 
-                <!-- Panel 2: About -->
-                <section class="panel panel-2" data-index="1">
-                    <div class="panel-content">
-                        <div class="chapter">PHILOSOPHY</div>
-                        <div class="mega-text">AUTHENTICITY</div>
-                        <div class="text">
-                            <p>Creating a unique, honest, and meaningful spaces that belong to their place. A true reflection of their purpose.</p>
+        <!-- ================= PAGE: STUDIO ================= -->
+        <div id="page-studio" class="page-view pt-24">
+            <section class="relative h-[60vh] flex items-center justify-center overflow-hidden">
+                <img src="https://images.unsplash.com/photo-1497366216548-37526070297c?q=80&w=2069&auto=format&fit=crop" class="absolute inset-0 w-full h-full object-cover opacity-20 mix-blend-luminosity">
+                <div class="absolute inset-0 bg-gradient-to-b from-[#0a0a0a] via-transparent to-[#0a0a0a] z-0"></div>
+                
+                <div class="relative z-10 text-center px-4 max-w-4xl mx-auto">
+                    <h1 class="text-5xl md:text-7xl font-serif mb-6 text-white reveal">The Studio</h1>
+                    <p class="text-lg text-gray-400 font-light reveal reveal-delay-1">Redefining the boundaries between environment, structure, and human interaction.</p>
+                </div>
+            </section>
+            
+            <section class="py-32 px-6 md:px-12 bg-transparent">
+                <div class="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+                    <div class="reveal">
+                        <h2 class="text-sm text-arch-accent uppercase tracking-widest mb-4">Our Origins</h2>
+                        <h3 class="text-3xl md:text-4xl font-serif mb-8">A legacy of precision and context.</h3>
+                        <p class="text-arch-muted font-light leading-relaxed mb-6">
+                            Founded on the principle of contextual modernism, Monoarch Studio approaches design as a dialogue between site, culture, and purpose. We strip away the superfluous to reveal the essence of a space.
+                        </p>
+                        <p class="text-arch-muted font-light leading-relaxed">
+                            Our methodology is rigorous. From expansive urban masterplans to intimate residential interiors, we bridge the gap between bold conceptual thinking and meticulous execution. We collaborate closely with artisans, engineers, and clients to ensure every detail serves the greater vision.
+                        </p>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4 reveal reveal-delay-2 cursor-interact">
+                        <!-- Image 1: Projects Link -->
+                        <a href="#projects" onclick="window.appNavigate('projects', event)" class="relative block group rounded-image h-64 mt-8 overflow-hidden">
+                            <img src="https://images.unsplash.com/photo-1503387762-592deb58ef4e?q=80&w=1000&auto=format&fit=crop" class="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-700 group-hover:scale-105">
+                            <div class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-500 flex items-center justify-center">
+                                <span class="text-white font-serif text-2xl tracking-widest uppercase transform translate-y-4 group-hover:translate-y-0 transition-transform duration-500">Projects</span>
+                            </div>
+                        </a>
+                        
+                        <!-- Image 2: Expertise Link -->
+                        <a href="#expertise" onclick="window.appNavigate('expertise', event)" class="relative block group rounded-image h-64 overflow-hidden">
+                            <img src="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=1000&auto=format&fit=crop" class="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-700 group-hover:scale-105">
+                            <div class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-500 flex items-center justify-center">
+                                <span class="text-white font-serif text-2xl tracking-widest uppercase transform translate-y-4 group-hover:translate-y-0 transition-transform duration-500">Expertise</span>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <!-- ================= PAGE: PROJECTS ================= -->
+        <div id="page-projects" class="page-view pt-32">
+            <section class="py-12 px-6 md:px-12 overflow-hidden">
+                <div class="max-w-7xl mx-auto mb-16 text-center parallax-el" data-speed="0.05">
+                    <h1 class="text-5xl md:text-7xl font-serif mb-6 reveal">Selected Works</h1>
+                    <p class="text-arch-muted font-light reveal reveal-delay-1">An archive of our most defining spatial interventions.</p>
+                </div>
+
+                <!-- Category Filter Tabs -->
+                <div id="project-tabs-placeholder" class="mb-20 relative">
+                    <div id="project-tabs-wrapper" class="flex flex-col items-center justify-center gap-6 md:gap-8 reveal reveal-delay-2 z-20 cursor-interact w-full">
+                        <button onclick="window.filterProjects('all', this)" class="project-tab active text-sm md:text-base font-sans tracking-wide text-arch-text hover:text-arch-accent outline-none whitespace-nowrap">All Selected Works</button>
+                        
+                        <div id="project-sub-tabs" class="flex flex-wrap justify-center gap-6 md:gap-12 transition-all duration-500">
+                            <button onclick="window.filterProjects('residential', this)" class="project-tab text-sm md:text-base font-sans tracking-wide text-arch-text hover:text-arch-accent outline-none whitespace-nowrap">Residential</button>
+                            <button onclick="window.filterProjects('commercial', this)" class="project-tab text-sm md:text-base font-sans tracking-wide text-arch-text hover:text-arch-accent outline-none whitespace-nowrap">Commercial & retail</button>
+                            <button onclick="window.filterProjects('hospitality', this)" class="project-tab text-sm md:text-base font-sans tracking-wide text-arch-text hover:text-arch-accent outline-none whitespace-nowrap">Hospitality</button>
+                            <button onclick="window.filterProjects('industrial', this)" class="project-tab text-sm md:text-base font-sans tracking-wide text-arch-text hover:text-arch-accent outline-none whitespace-nowrap">Industrial</button>
+                            <button onclick="window.filterProjects('competition', this)" class="project-tab text-sm md:text-base font-sans tracking-wide text-arch-text hover:text-arch-accent outline-none whitespace-nowrap">Competition</button>
                         </div>
                     </div>
-                </section>
+                </div>
 
-                <!-- Panel 3: Projects -->
-                <section class="panel panel-3" data-index="2">
-                    <div class="panel-content">
-                        <div class="chapter">OUR WORK</div>
-                        <div class="mega-text">CRAFT</div>
-                        <div class="text">
-                            <p>Each project is carefully considered. From concept to completion, we focus on creating experiences that are both functional and beautiful. While our aesthetic is recognisable, each project crafted in response to the aspirations of our clients, the opportunities of the site, and the creative vision of our architectural team.</p>
+                <!-- Categories Wrapper -->
+                <div id="categories-wrapper">
+                    
+                    <!-- RESIDENTIAL CAROUSEL -->
+                    <div class="category-section mb-32" data-category="residential">
+                        <h3 class="text-2xl font-serif text-arch-accent mb-10 text-center tracking-widest uppercase">Residential</h3>
+                        <div class="swiper category-swiper cursor-drag">
+                            <div class="swiper-wrapper">
+                                <!-- Slides -->
+                                <div class="swiper-slide w-[85vw] md:w-[60vw]">
+                                    <div class="project-card relative block group h-[50vh] md:h-[70vh]">
+                                        <div class="parallax-wrap h-full w-full"><img src="https://images.unsplash.com/photo-1512917774080-9991f1c4c750?q=80&w=2070&auto=format&fit=crop" class="project-image parallax-inner object-cover"></div>
+                                        <div class="project-overlay absolute inset-0 flex flex-col justify-end p-8 md:p-12"><div class="project-text"><h4 class="text-3xl md:text-5xl font-serif text-white mb-2">The Obsidian Residence</h4><p class="text-gray-400 text-sm font-light">Kyoto, Japan</p></div></div>
+                                    </div>
+                                </div>
+                                <div class="swiper-slide w-[85vw] md:w-[60vw]">
+                                    <div class="project-card relative block group h-[50vh] md:h-[70vh]">
+                                        <div class="parallax-wrap h-full w-full"><img src="https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?q=80&w=2075&auto=format&fit=crop" class="project-image parallax-inner object-cover"></div>
+                                        <div class="project-overlay absolute inset-0 flex flex-col justify-end p-8 md:p-12"><div class="project-text"><h4 class="text-3xl md:text-5xl font-serif text-white mb-2">Villa Serenity</h4><p class="text-gray-400 text-sm font-light">Amalfi Coast, Italy</p></div></div>
+                                    </div>
+                                </div>
+                                <div class="swiper-slide w-[85vw] md:w-[60vw]">
+                                    <div class="project-card relative block group h-[50vh] md:h-[70vh]">
+                                        <div class="parallax-wrap h-full w-full"><img src="https://images.unsplash.com/photo-1600607687931-cebf0746e426?q=80&w=2070&auto=format&fit=crop" class="project-image parallax-inner object-cover"></div>
+                                        <div class="project-overlay absolute inset-0 flex flex-col justify-end p-8 md:p-12"><div class="project-text"><h4 class="text-3xl md:text-5xl font-serif text-white mb-2">Oasis House</h4><p class="text-gray-400 text-sm font-light">Palm Springs, CA</p></div></div>
+                                    </div>
+                                </div>
+                                <div class="swiper-slide w-[85vw] md:w-[60vw]">
+                                    <div class="project-card relative block group h-[50vh] md:h-[70vh]">
+                                        <div class="parallax-wrap h-full w-full"><img src="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=2070&auto=format&fit=crop" class="project-image parallax-inner object-cover"></div>
+                                        <div class="project-overlay absolute inset-0 flex flex-col justify-end p-8 md:p-12"><div class="project-text"><h4 class="text-3xl md:text-5xl font-serif text-white mb-2">Lakeside Pavilion</h4><p class="text-gray-400 text-sm font-light">Geneva, Switzerland</p></div></div>
+                                    </div>
+                                </div>
+                                <div class="swiper-slide w-[85vw] md:w-[60vw]">
+                                    <div class="project-card relative block group h-[50vh] md:h-[70vh]">
+                                        <div class="parallax-wrap h-full w-full"><img src="https://images.unsplash.com/photo-1510798831971-661eb04b3739?q=80&w=2070&auto=format&fit=crop" class="project-image parallax-inner object-cover"></div>
+                                        <div class="project-overlay absolute inset-0 flex flex-col justify-end p-8 md:p-12"><div class="project-text"><h4 class="text-3xl md:text-5xl font-serif text-white mb-2">The Canopy</h4><p class="text-gray-400 text-sm font-light">Bali, Indonesia</p></div></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="swiper-pagination !bottom-0 mt-8 relative"></div>
                         </div>
                     </div>
-                </section>
 
-                <!-- Panel 4: Contact -->
-                <section class="panel panel-4" data-index="3">
-                    <div class="panel-content">
-                        <div class="contact-name">GET IN TOUCH</div>
-                        <div class="email-wrapper">
-                            <a href="mailto:info@monoarch.co" class="email">info@monoarch.co</a>
-                            <button class="copy-email" title="Copy email">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
-                                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
-                                </svg>
+                    <!-- COMMERCIAL CAROUSEL -->
+                    <div class="category-section mb-32" data-category="commercial">
+                        <h3 class="text-2xl font-serif text-arch-accent mb-10 text-center tracking-widest uppercase">Commercial & retail</h3>
+                        <div class="swiper category-swiper cursor-drag">
+                            <div class="swiper-wrapper">
+                                <div class="swiper-slide w-[85vw] md:w-[60vw]">
+                                    <div class="project-card relative block group h-[50vh] md:h-[70vh]">
+                                        <div class="parallax-wrap h-full w-full"><img src="https://images.unsplash.com/photo-1497366216548-37526070297c?q=80&w=2069&auto=format&fit=crop" class="project-image parallax-inner object-cover"></div>
+                                        <div class="project-overlay absolute inset-0 flex flex-col justify-end p-8 md:p-12"><div class="project-text"><h4 class="text-3xl md:text-5xl font-serif text-white mb-2">Apex Corporate HQ</h4><p class="text-gray-400 text-sm font-light">London, UK</p></div></div>
+                                    </div>
+                                </div>
+                                <div class="swiper-slide w-[85vw] md:w-[60vw]">
+                                    <div class="project-card relative block group h-[50vh] md:h-[70vh]">
+                                        <div class="parallax-wrap h-full w-full"><img src="https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80&w=2070&auto=format&fit=crop" class="project-image parallax-inner object-cover"></div>
+                                        <div class="project-overlay absolute inset-0 flex flex-col justify-end p-8 md:p-12"><div class="project-text"><h4 class="text-3xl md:text-5xl font-serif text-white mb-2">Nexus Tower</h4><p class="text-gray-400 text-sm font-light">Dubai, UAE</p></div></div>
+                                    </div>
+                                </div>
+                                <div class="swiper-slide w-[85vw] md:w-[60vw]">
+                                    <div class="project-card relative block group h-[50vh] md:h-[70vh]">
+                                        <div class="parallax-wrap h-full w-full"><img src="https://images.unsplash.com/photo-1524230572899-a752b3835840?q=80&w=2036&auto=format&fit=crop" class="project-image parallax-inner object-cover"></div>
+                                        <div class="project-overlay absolute inset-0 flex flex-col justify-end p-8 md:p-12"><div class="project-text"><h4 class="text-3xl md:text-5xl font-serif text-white mb-2">The Atrium Boutique</h4><p class="text-gray-400 text-sm font-light">Paris, France</p></div></div>
+                                    </div>
+                                </div>
+                                <div class="swiper-slide w-[85vw] md:w-[60vw]">
+                                    <div class="project-card relative block group h-[50vh] md:h-[70vh]">
+                                        <div class="parallax-wrap h-full w-full"><img src="https://images.unsplash.com/photo-1449844908441-8829872d2607?q=80&w=2070&auto=format&fit=crop" class="project-image parallax-inner object-cover"></div>
+                                        <div class="project-overlay absolute inset-0 flex flex-col justify-end p-8 md:p-12"><div class="project-text"><h4 class="text-3xl md:text-5xl font-serif text-white mb-2">Civic Center Plaza</h4><p class="text-gray-400 text-sm font-light">Melbourne, Australia</p></div></div>
+                                    </div>
+                                </div>
+                                <div class="swiper-slide w-[85vw] md:w-[60vw]">
+                                    <div class="project-card relative block group h-[50vh] md:h-[70vh]">
+                                        <div class="parallax-wrap h-full w-full"><img src="https://images.unsplash.com/photo-1582653291997-079a1c04e5d1?q=80&w=2070&auto=format&fit=crop" class="project-image parallax-inner object-cover"></div>
+                                        <div class="project-overlay absolute inset-0 flex flex-col justify-end p-8 md:p-12"><div class="project-text"><h4 class="text-3xl md:text-5xl font-serif text-white mb-2">Vanguard Retail</h4><p class="text-gray-400 text-sm font-light">Tokyo, Japan</p></div></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="swiper-pagination !bottom-0 mt-8 relative"></div>
+                        </div>
+                    </div>
+
+                    <!-- HOSPITALITY CAROUSEL -->
+                    <div class="category-section mb-32" data-category="hospitality">
+                        <h3 class="text-2xl font-serif text-arch-accent mb-10 text-center tracking-widest uppercase">Hospitality</h3>
+                        <div class="swiper category-swiper cursor-drag">
+                            <div class="swiper-wrapper">
+                                <div class="swiper-slide w-[85vw] md:w-[60vw]">
+                                    <div class="project-card relative block group h-[50vh] md:h-[70vh]">
+                                        <div class="parallax-wrap h-full w-full"><img src="https://images.unsplash.com/photo-1542314831-c6a4d27ce6a2?q=80&w=2070&auto=format&fit=crop" class="project-image parallax-inner object-cover"></div>
+                                        <div class="project-overlay absolute inset-0 flex flex-col justify-end p-8 md:p-12"><div class="project-text"><h4 class="text-3xl md:text-5xl font-serif text-white mb-2">Echo Valley Retreat</h4><p class="text-gray-400 text-sm font-light">Aspen, CO</p></div></div>
+                                    </div>
+                                </div>
+                                <div class="swiper-slide w-[85vw] md:w-[60vw]">
+                                    <div class="project-card relative block group h-[50vh] md:h-[70vh]">
+                                        <div class="parallax-wrap h-full w-full"><img src="https://images.unsplash.com/photo-1566073771259-6a8506099945?q=80&w=2070&auto=format&fit=crop" class="project-image parallax-inner object-cover"></div>
+                                        <div class="project-overlay absolute inset-0 flex flex-col justify-end p-8 md:p-12"><div class="project-text"><h4 class="text-3xl md:text-5xl font-serif text-white mb-2">Aura Grand Hotel</h4><p class="text-gray-400 text-sm font-light">Maldives</p></div></div>
+                                    </div>
+                                </div>
+                                <div class="swiper-slide w-[85vw] md:w-[60vw]">
+                                    <div class="project-card relative block group h-[50vh] md:h-[70vh]">
+                                        <div class="parallax-wrap h-full w-full"><img src="https://images.unsplash.com/photo-1582719508461-905c673771fd?q=80&w=2025&auto=format&fit=crop" class="project-image parallax-inner object-cover"></div>
+                                        <div class="project-overlay absolute inset-0 flex flex-col justify-end p-8 md:p-12"><div class="project-text"><h4 class="text-3xl md:text-5xl font-serif text-white mb-2">The Monarch Suites</h4><p class="text-gray-400 text-sm font-light">Vienna, Austria</p></div></div>
+                                    </div>
+                                </div>
+                                <div class="swiper-slide w-[85vw] md:w-[60vw]">
+                                    <div class="project-card relative block group h-[50vh] md:h-[70vh]">
+                                        <div class="parallax-wrap h-full w-full"><img src="https://images.unsplash.com/photo-1551882547-ff40c0d5b9d4?q=80&w=2086&auto=format&fit=crop" class="project-image parallax-inner object-cover"></div>
+                                        <div class="project-overlay absolute inset-0 flex flex-col justify-end p-8 md:p-12"><div class="project-text"><h4 class="text-3xl md:text-5xl font-serif text-white mb-2">Lumina Lounge</h4><p class="text-gray-400 text-sm font-light">New York, NY</p></div></div>
+                                    </div>
+                                </div>
+                                <div class="swiper-slide w-[85vw] md:w-[60vw]">
+                                    <div class="project-card relative block group h-[50vh] md:h-[70vh]">
+                                        <div class="parallax-wrap h-full w-full"><img src="https://images.unsplash.com/photo-1571003123894-1f0594d2b5d9?q=80&w=2049&auto=format&fit=crop" class="project-image parallax-inner object-cover"></div>
+                                        <div class="project-overlay absolute inset-0 flex flex-col justify-end p-8 md:p-12"><div class="project-text"><h4 class="text-3xl md:text-5xl font-serif text-white mb-2">Solstice Resort</h4><p class="text-gray-400 text-sm font-light">Santorini, Greece</p></div></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="swiper-pagination !bottom-0 mt-8 relative"></div>
+                        </div>
+                    </div>
+
+                    <!-- INDUSTRIAL CAROUSEL -->
+                    <div class="category-section mb-32" data-category="industrial">
+                        <h3 class="text-2xl font-serif text-arch-accent mb-10 text-center tracking-widest uppercase">Industrial</h3>
+                        <div class="swiper category-swiper cursor-drag">
+                            <div class="swiper-wrapper">
+                                <div class="swiper-slide w-[85vw] md:w-[60vw]">
+                                    <div class="project-card relative block group h-[50vh] md:h-[70vh]">
+                                        <div class="parallax-wrap h-full w-full"><img src="https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?q=80&w=2070&auto=format&fit=crop" class="project-image parallax-inner object-cover"></div>
+                                        <div class="project-overlay absolute inset-0 flex flex-col justify-end p-8 md:p-12"><div class="project-text"><h4 class="text-3xl md:text-5xl font-serif text-white mb-2">Nova Logistics Hub</h4><p class="text-gray-400 text-sm font-light">Rotterdam, NL</p></div></div>
+                                    </div>
+                                </div>
+                                <div class="swiper-slide w-[85vw] md:w-[60vw]">
+                                    <div class="project-card relative block group h-[50vh] md:h-[70vh]">
+                                        <div class="parallax-wrap h-full w-full"><img src="https://images.unsplash.com/photo-1504917595217-d4bfd2d14b5a?q=80&w=2070&auto=format&fit=crop" class="project-image parallax-inner object-cover"></div>
+                                        <div class="project-overlay absolute inset-0 flex flex-col justify-end p-8 md:p-12"><div class="project-text"><h4 class="text-3xl md:text-5xl font-serif text-white mb-2">Forge Innovation Center</h4><p class="text-gray-400 text-sm font-light">Detroit, MI</p></div></div>
+                                    </div>
+                                </div>
+                                <div class="swiper-slide w-[85vw] md:w-[60vw]">
+                                    <div class="project-card relative block group h-[50vh] md:h-[70vh]">
+                                        <div class="parallax-wrap h-full w-full"><img src="https://images.unsplash.com/photo-1532094349884-543bc11b234d?q=80&w=2070&auto=format&fit=crop" class="project-image parallax-inner object-cover"></div>
+                                        <div class="project-overlay absolute inset-0 flex flex-col justify-end p-8 md:p-12"><div class="project-text"><h4 class="text-3xl md:text-5xl font-serif text-white mb-2">Aero Tech Facility</h4><p class="text-gray-400 text-sm font-light">Seattle, WA</p></div></div>
+                                    </div>
+                                </div>
+                                <div class="swiper-slide w-[85vw] md:w-[60vw]">
+                                    <div class="project-card relative block group h-[50vh] md:h-[70vh]">
+                                        <div class="parallax-wrap h-full w-full"><img src="https://images.unsplash.com/photo-1565515261920-dbdc3d82a466?q=80&w=2070&auto=format&fit=crop" class="project-image parallax-inner object-cover"></div>
+                                        <div class="project-overlay absolute inset-0 flex flex-col justify-end p-8 md:p-12"><div class="project-text"><h4 class="text-3xl md:text-5xl font-serif text-white mb-2">Quantum Energy Plant</h4><p class="text-gray-400 text-sm font-light">Reykjavik, Iceland</p></div></div>
+                                    </div>
+                                </div>
+                                <div class="swiper-slide w-[85vw] md:w-[60vw]">
+                                    <div class="project-card relative block group h-[50vh] md:h-[70vh]">
+                                        <div class="parallax-wrap h-full w-full"><img src="https://images.unsplash.com/photo-1504307651254-35680f356f67?q=80&w=2069&auto=format&fit=crop" class="project-image parallax-inner object-cover"></div>
+                                        <div class="project-overlay absolute inset-0 flex flex-col justify-end p-8 md:p-12"><div class="project-text"><h4 class="text-3xl md:text-5xl font-serif text-white mb-2">Horizon Warehouse</h4><p class="text-gray-400 text-sm font-light">Hamburg, Germany</p></div></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="swiper-pagination !bottom-0 mt-8 relative"></div>
+                        </div>
+                    </div>
+
+                    <!-- COMPETITION CAROUSEL -->
+                    <div class="category-section mb-32" data-category="competition">
+                        <h3 class="text-2xl font-serif text-arch-accent mb-10 text-center tracking-widest uppercase">Competition</h3>
+                        <div class="swiper category-swiper cursor-drag">
+                            <div class="swiper-wrapper">
+                                <div class="swiper-slide w-[85vw] md:w-[60vw]">
+                                    <div class="project-card relative block group h-[50vh] md:h-[70vh]">
+                                        <div class="parallax-wrap h-full w-full"><img src="https://images.unsplash.com/photo-1518005020951-eccb494ad742?q=80&w=2065&auto=format&fit=crop" class="project-image parallax-inner object-cover"></div>
+                                        <div class="project-overlay absolute inset-0 flex flex-col justify-end p-8 md:p-12"><div class="project-text"><h4 class="text-3xl md:text-5xl font-serif text-white mb-2">National Museum Proposal</h4><p class="text-gray-400 text-sm font-light">Helsinki, Finland</p></div></div>
+                                    </div>
+                                </div>
+                                <div class="swiper-slide w-[85vw] md:w-[60vw]">
+                                    <div class="project-card relative block group h-[50vh] md:h-[70vh]">
+                                        <div class="parallax-wrap h-full w-full"><img src="https://images.unsplash.com/photo-1516214104703-d2a148dc8232?q=80&w=2070&auto=format&fit=crop" class="project-image parallax-inner object-cover"></div>
+                                        <div class="project-overlay absolute inset-0 flex flex-col justify-end p-8 md:p-12"><div class="project-text"><h4 class="text-3xl md:text-5xl font-serif text-white mb-2">Eco-Campus Masterplan</h4><p class="text-gray-400 text-sm font-light">Singapore</p></div></div>
+                                    </div>
+                                </div>
+                                <div class="swiper-slide w-[85vw] md:w-[60vw]">
+                                    <div class="project-card relative block group h-[50vh] md:h-[70vh]">
+                                        <div class="parallax-wrap h-full w-full"><img src="https://images.unsplash.com/photo-1487958449943-2429e5be8625?q=80&w=2070&auto=format&fit=crop" class="project-image parallax-inner object-cover"></div>
+                                        <div class="project-overlay absolute inset-0 flex flex-col justify-end p-8 md:p-12"><div class="project-text"><h4 class="text-3xl md:text-5xl font-serif text-white mb-2">Pavilion of Light</h4><p class="text-gray-400 text-sm font-light">Venice Biennale</p></div></div>
+                                    </div>
+                                </div>
+                                <div class="swiper-slide w-[85vw] md:w-[60vw]">
+                                    <div class="project-card relative block group h-[50vh] md:h-[70vh]">
+                                        <div class="parallax-wrap h-full w-full"><img src="https://images.unsplash.com/photo-1541888059-e93df727d5fb?q=80&w=2070&auto=format&fit=crop" class="project-image parallax-inner object-cover"></div>
+                                        <div class="project-overlay absolute inset-0 flex flex-col justify-end p-8 md:p-12"><div class="project-text"><h4 class="text-3xl md:text-5xl font-serif text-white mb-2">Urban Transit Hub</h4><p class="text-gray-400 text-sm font-light">Toronto, Canada</p></div></div>
+                                    </div>
+                                </div>
+                                <div class="swiper-slide w-[85vw] md:w-[60vw]">
+                                    <div class="project-card relative block group h-[50vh] md:h-[70vh]">
+                                        <div class="parallax-wrap h-full w-full"><img src="https://images.unsplash.com/photo-1506501139174-099022df5260?q=80&w=2071&auto=format&fit=crop" class="project-image parallax-inner object-cover"></div>
+                                        <div class="project-overlay absolute inset-0 flex flex-col justify-end p-8 md:p-12"><div class="project-text"><h4 class="text-3xl md:text-5xl font-serif text-white mb-2">Floating Library</h4><p class="text-gray-400 text-sm font-light">Oslo, Norway</p></div></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="swiper-pagination !bottom-0 mt-8 relative"></div>
+                        </div>
+                    </div>
+
+                </div>
+            </section>
+        </div>
+
+        <!-- ================= PAGE: EXPERTISE ================= -->
+        <div id="page-expertise" class="page-view pt-32">
+            <section class="py-12 px-6 md:px-12">
+                <div class="max-w-7xl mx-auto mb-24 text-center">
+                    <h1 class="text-5xl md:text-7xl font-serif mb-6 reveal">Core Expertise</h1>
+                    <p class="text-arch-muted font-light reveal reveal-delay-1 max-w-2xl mx-auto">We provide comprehensive design solutions across multiple scales, seamlessly integrating disciplines for a holistic outcome.</p>
+                </div>
+
+                <div class="max-w-7xl mx-auto space-y-32">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-16 items-center reveal cursor-interact">
+                        <div>
+                            <div class="w-14 h-14 bg-transparent border border-white/10 flex items-center justify-center mb-8 text-arch-accent transition-colors duration-500 hover:bg-arch-accent hover:text-[#0a0a0a] rounded-xl">
+                                <i data-lucide="building-2" class="w-6 h-6"></i>
+                            </div>
+                            <h3 class="text-3xl font-serif mb-6">Architecture</h3>
+                            <p class="text-arch-muted font-light leading-relaxed">
+                                Concept-driven architectural design from initial sketching to final construction documentation. We create enduring structures that respond to their environment, optimizing light, flow, and material longevity.
+                            </p>
+                        </div>
+                        <div class="h-[500px]">
+                            <img src="https://images.unsplash.com/photo-1487958449943-2429e5be8625?q=80&w=1000&auto=format&fit=crop" class="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-700 rounded-image">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-16 items-center reveal cursor-interact">
+                        <div class="order-2 md:order-1 h-[500px]">
+                            <img src="https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?q=80&w=1000&auto=format&fit=crop" class="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-700 rounded-image">
+                        </div>
+                        <div class="order-1 md:order-2">
+                            <div class="w-14 h-14 bg-transparent border border-white/10 flex items-center justify-center mb-8 text-arch-accent transition-colors duration-500 hover:bg-arch-accent hover:text-[#0a0a0a] rounded-xl">
+                                <i data-lucide="sofa" class="w-6 h-6"></i>
+                            </div>
+                            <h3 class="text-3xl font-serif mb-6">Interior Architecture</h3>
+                            <p class="text-arch-muted font-light leading-relaxed">
+                                Curating spaces that balance raw aesthetics with refined functionality. We look beyond decoration, reshaping interior volumes and selecting premium materials to reflect distinct identities.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-16 items-center reveal cursor-interact">
+                        <div>
+                            <div class="w-14 h-14 bg-transparent border border-white/10 flex items-center justify-center mb-8 text-arch-accent transition-colors duration-500 hover:bg-arch-accent hover:text-[#0a0a0a] rounded-xl">
+                                <i data-lucide="map" class="w-6 h-6"></i>
+                            </div>
+                            <h3 class="text-3xl font-serif mb-6">Urban Planning</h3>
+                            <p class="text-arch-muted font-light leading-relaxed">
+                                Strategic masterplanning that shapes communities and defines the future of cities. We design sustainable urban frameworks that foster social interaction and prioritize pedestrian experiences.
+                            </p>
+                        </div>
+                        <div class="h-[500px]">
+                            <img src="https://images.unsplash.com/photo-1449844908441-8829872d2607?q=80&w=1000&auto=format&fit=crop" class="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-700 rounded-image">
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <!-- ================= PAGE: TEAM ================= -->
+        <div id="page-team" class="page-view pt-32">
+            <section class="py-12 px-6 md:px-12">
+                <div class="max-w-7xl mx-auto mb-20 text-center">
+                    <h1 class="text-5xl md:text-7xl font-serif mb-6 reveal">Leadership</h1>
+                    <p class="text-arch-muted font-light reveal reveal-delay-1 max-w-2xl mx-auto">The visionaries behind Monoarch Studio. A diverse collective of spatial thinkers.</p>
+                </div>
+
+                <div class="max-w-7xl mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10">
+                    <div class="team-card cursor-interact group reveal">
+                        <div class="team-img-wrapper aspect-[3/4] mb-6"><img src="https://images.unsplash.com/photo-1560250097-0b93528c311a?q=80&w=800&auto=format&fit=crop" class="w-full h-full object-cover"></div>
+                        <h4 class="font-serif text-2xl mb-1">Marcus Vance</h4><p class="text-xs text-arch-accent uppercase tracking-widest">Principal Architect</p>
+                    </div>
+                    <div class="team-card cursor-interact group reveal reveal-delay-1">
+                        <div class="team-img-wrapper aspect-[3/4] mb-6"><img src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?q=80&w=800&auto=format&fit=crop" class="w-full h-full object-cover"></div>
+                        <h4 class="font-serif text-2xl mb-1">Elena Rostova</h4><p class="text-xs text-arch-accent uppercase tracking-widest">Head of Interiors</p>
+                    </div>
+                    <div class="team-card cursor-interact group reveal reveal-delay-2">
+                        <div class="team-img-wrapper aspect-[3/4] mb-6"><img src="https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?q=80&w=800&auto=format&fit=crop" class="w-full h-full object-cover"></div>
+                        <h4 class="font-serif text-2xl mb-1">Julian Hayes</h4><p class="text-xs text-arch-accent uppercase tracking-widest">Senior Urban Planner</p>
+                    </div>
+                    <div class="team-card cursor-interact group reveal reveal-delay-3">
+                        <div class="team-img-wrapper aspect-[3/4] mb-6"><img src="https://images.unsplash.com/photo-1580489944761-15a19d654956?q=80&w=800&auto=format&fit=crop" class="w-full h-full object-cover"></div>
+                        <h4 class="font-serif text-2xl mb-1">Sarah Chen</h4><p class="text-xs text-arch-accent uppercase tracking-widest">Design Director</p>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <!-- ================= PAGE: ENQUIRE ================= -->
+        <div id="page-enquire" class="page-view pt-32 min-h-screen flex flex-col justify-center">
+            <section class="py-12 px-6 md:px-12 w-full">
+                <div class="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-20">
+                    <div class="reveal">
+                        <h2 class="text-sm text-arch-accent uppercase tracking-widest mb-6">Start a Dialogue</h2>
+                        <h3 class="text-5xl md:text-7xl font-serif mb-10 leading-tight">Let's build something extraordinary.</h3>
+                        
+                        <div class="space-y-10 mt-16 border-t border-white/5 pt-10">
+                            <div class="cursor-interact">
+                                <p class="text-xs uppercase tracking-widest text-arch-muted mb-3">Global Headquarters</p>
+                                <p class="font-serif text-xl">142 Design District Blvd,<br>New York, NY 10012</p>
+                            </div>
+                            <div class="cursor-interact">
+                                <p class="text-xs uppercase tracking-widest text-arch-muted mb-3">Direct Contact</p>
+                                <p class="font-serif text-xl hover:text-arch-accent transition-colors"><a href="mailto:studio@monoarch.com">studio@monoarch.com</a></p>
+                                <p class="font-serif text-xl">+1 (555) 284-8932</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-transparent p-8 md:p-12 reveal reveal-delay-1 border border-white/5 rounded-2xl">
+                        <form id="contactForm" onsubmit="event.preventDefault();" class="space-y-10">
+                            <div class="cursor-interact">
+                                <input type="text" placeholder="Your Name" class="arch-input text-lg" required>
+                            </div>
+                            <div class="cursor-interact">
+                                <input type="email" placeholder="Email Address" class="arch-input text-lg" required>
+                            </div>
+                            <div class="cursor-interact">
+                                <select class="arch-input text-gray-400 text-lg" required>
+                                    <option value="" disabled selected>Nature of Inquiry</option>
+                                    <option value="residential">Residential Project</option>
+                                    <option value="commercial">Commercial Development</option>
+                                    <option value="interior">Interior Redesign</option>
+                                    <option value="career">Careers & Press</option>
+                                </select>
+                            </div>
+                            <div class="cursor-interact">
+                                <textarea placeholder="Share details about your vision..." rows="4" class="arch-input resize-none text-lg" required></textarea>
+                            </div>
+                            <button type="submit" class="magnetic cursor-interact btn-morph w-full bg-white text-[#0a0a0a] py-5 uppercase tracking-widest text-sm font-medium hover:bg-arch-accent hover:text-white transition-all duration-500 mt-4">
+                                Submit Inquiry
                             </button>
-                            <span class="copy-tooltip">Copied!</span>
-                        </div>
+                        </form>
                     </div>
-                </section>
+                </div>
+            </section>
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-black py-12 px-6 md:px-12 border-t border-white/10 mt-auto">
+        <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center text-center md:text-left">
+            <div class="mb-6 md:mb-0">
+                <a href="#home" onclick="window.appNavigate('home', event)" class="text-xl font-serif tracking-widest text-white uppercase font-semibold">
+                    <img src="https://raw.githubusercontent.com/ysrys/mono-website/refs/heads/main/LOGO%20T%20WHITE.png" alt="Monoarch Studio" class="h-6 object-contain inline-block">
+                </a>
+                <p class="text-xs text-arch-muted mt-2">&copy; 2026 Monoarch Studio. All rights reserved.</p>
+            </div>
+            
+            <div class="flex space-x-6 text-xs uppercase tracking-widest text-arch-muted">
+                <a href="#" class="hover:text-white transition-colors">Privacy Policy</a>
+                <a href="#" class="hover:text-white transition-colors">Terms of Service</a>
             </div>
         </div>
-    </div>
+    </footer>
 
-    <div class="navigation">
-        <div class="nav-text">SCROLL</div>
-        <div class="nav-progress">
-            <div class="nav-progress-fill"></div>
-        </div>
-        <div class="nav-text">01 / 04</div>
-    </div>
-
+    <!-- Scripts -->
     <script>
-        document.addEventListener("DOMContentLoaded", () => {
-            const panelsContainer = document.querySelector(".panels-container");
-            const panels = document.querySelectorAll(".panel");
-            const progressFill = document.querySelector(".nav-progress-fill");
-            const navText = document.querySelectorAll(".nav-text")[1];
-            const leftMenu = document.querySelector(".left-menu");
-            const menuBtn = document.querySelector(".menu-btn");
-            const sectionNavItems = document.querySelectorAll(".section-nav-item");
-            const copyEmailBtn = document.querySelector(".copy-email");
-            const copyTooltip = document.querySelector(".copy-tooltip");
-            const horizontalContainer = document.querySelector(".horizontal-container");
+        // Global Navigation Functions attached to window explicitly to prevent reference errors
+        window.appNavigate = function(pageId, event) {
+            if (event) event.preventDefault();
+            if (window.isMenuOpen) window.toggleMenu();
+            window.history.pushState(null, null, `#${pageId}`);
 
-            const SMOOTH_FACTOR = 0.065;
-            const PANEL_COUNT = 4;
+            const currentActive = document.querySelector('.page-view.active');
+            
+            if (currentActive && currentActive.id === `page-${pageId}`) return;
 
-            let targetX = 0;
-            let currentX = 0;
-            let panelWidth = window.innerWidth;
-            let maxScroll = (PANEL_COUNT - 1) * panelWidth;
-            let isAnimating = false;
-            let currentPanel = 0;
-            let menuExpanded = false;
-            let isDragging = false;
-            let startX = 0;
-            let startScrollX = 0;
+            if (currentActive) {
+                currentActive.classList.add('fade-out');
+                setTimeout(() => {
+                    currentActive.classList.remove('active', 'fade-out');
+                    window.showNextPage(pageId);
+                }, 400);
+            } else {
+                window.showNextPage(pageId);
+            }
+            window.updateNavHighlights(pageId);
+        };
 
-            const lerp = (start, end, factor) => start + (end - start) * factor;
-            const clamp = (num, min, max) => Math.min(Math.max(num, min), max);
-
-            // Copy email functionality
-            copyEmailBtn.addEventListener("click", () => {
-                const email = document.querySelector(".email").textContent;
-                navigator.clipboard.writeText(email).then(() => {
-                    copyTooltip.classList.add("active");
-                    setTimeout(() => copyTooltip.classList.remove("active"), 2000);
-                });
-            });
-
-            // Menu functionality
-            menuBtn.addEventListener("click", () => {
-                menuExpanded = !menuExpanded;
-                leftMenu.classList.toggle("expanded");
-                document.body.classList.toggle("menu-expanded");
-
-                if (menuExpanded) {
-                    setTimeout(() => {
-                        sectionNavItems.forEach((item, index) => {
-                            setTimeout(() => item.classList.add("animate-in"), index * 30);
-                        });
-                    }, 150);
-                } else {
-                    sectionNavItems.forEach(item => item.classList.remove("animate-in"));
-                }
-
-                setTimeout(updateDimensions, 400);
-            });
-
-            const updateDimensions = () => {
-                panelWidth = window.innerWidth;
-                maxScroll = (PANEL_COUNT - 1) * panelWidth;
-                targetX = currentPanel * panelWidth;
-                currentX = targetX;
-
-                panels.forEach(panel => {
-                    panel.style.width = `${panelWidth}px`;
-                });
-
-                panelsContainer.style.transform = `translateX(-${currentX}px)`;
-            };
-
-            // Navigation
-            sectionNavItems.forEach((item) => {
-                item.addEventListener("click", () => {
-                    const index = parseInt(item.getAttribute("data-index"));
-                    targetX = index * panelWidth;
-
-                    sectionNavItems.forEach(navItem => navItem.classList.remove("active"));
-                    item.classList.add("active");
-
-                    startAnimation();
-
-                    if (menuExpanded) {
-                        menuExpanded = false;
-                        leftMenu.classList.remove("expanded");
-                        document.body.classList.remove("menu-expanded");
-                        sectionNavItems.forEach(item => item.classList.remove("animate-in"));
-                        setTimeout(updateDimensions, 400);
-                    }
-                });
-            });
-
-            const updateProgress = () => {
-                const progress = currentX / maxScroll;
-                progressFill.style.transform = `scaleX(${progress})`;
-            };
-
-            const updatePageCount = () => {
-                const currentPanelIndex = Math.round(currentX / panelWidth) + 1;
-                const formatted = currentPanelIndex.toString().padStart(2, '0');
-                navText.textContent = `${formatted} / 04`;
-
-                sectionNavItems.forEach((item, index) => {
-                    if (index === currentPanelIndex - 1) {
-                        item.classList.add("active");
-                    } else {
-                        item.classList.remove("active");
-                    }
-                });
-            };
-
-            const updateActivePanel = () => {
-                const newPanel = Math.round(currentX / panelWidth);
-                if (newPanel !== currentPanel) {
-                    panels[currentPanel]?.classList.remove("active");
-                    panels[newPanel]?.classList.add("active");
-                    currentPanel = newPanel;
-                }
-            };
-
-            const animate = () => {
-                currentX = lerp(currentX, targetX, SMOOTH_FACTOR);
-                panelsContainer.style.transform = `translateX(-${currentX}px)`;
-
-                updateProgress();
-                updatePageCount();
-                updateActivePanel();
-
-                if (Math.abs(targetX - currentX) > 0.1 || isAnimating) {
-                    requestAnimationFrame(animate);
-                } else {
-                    isAnimating = false;
-                }
-            };
-
-            const startAnimation = () => {
-                if (!isAnimating) {
-                    isAnimating = true;
-                    requestAnimationFrame(animate);
-                }
-            };
-
-            // Event handlers
-            horizontalContainer.addEventListener("wheel", (e) => {
-                e.preventDefault();
-                targetX = clamp(targetX + e.deltaY, 0, maxScroll);
-                startAnimation();
-            });
-
-            horizontalContainer.addEventListener("mousedown", (e) => {
-                if (e.target.closest(".left-menu") || e.target.closest(".copy-email")) return;
-                isDragging = true;
-                startX = e.clientX;
-                startScrollX = currentX;
-                document.body.style.cursor = "grabbing";
-                e.preventDefault();
-            });
-
-            window.addEventListener("mousemove", (e) => {
-                if (!isDragging) return;
-                const dx = e.clientX - startX;
-                targetX = clamp(startScrollX - dx, 0, maxScroll);
-                startAnimation();
-            });
-
-            window.addEventListener("mouseup", () => {
-                if (!isDragging) return;
-                isDragging = false;
-                document.body.style.cursor = "grab";
+        window.showNextPage = function(pageId) {
+            const targetPage = document.getElementById(`page-${pageId}`);
+            if (targetPage) {
+                targetPage.querySelectorAll('.reveal').forEach(el => el.classList.remove('active'));
+                targetPage.classList.add('active');
+                window.scrollTo({ top: 0, behavior: 'instant' }); 
                 
-                const nearestPanel = Math.round(targetX / panelWidth);
-                targetX = nearestPanel * panelWidth;
-                startAnimation();
+                setTimeout(() => {
+                    if (window.initObservers) window.initObservers();
+                    if (window.initInteractiveElements) window.initInteractiveElements();
+                    if (pageId === 'projects' && window.initSwipers) window.initSwipers();
+                }, 50);
+            }
+        };
+
+        window.updateNavHighlights = function(pageId) {
+            document.querySelectorAll('.nav-link').forEach(link => {
+                if (link.getAttribute('href') === `#${pageId}`) {
+                    link.classList.add('text-arch-accent');
+                    link.classList.remove('text-arch-text');
+                } else {
+                    link.classList.remove('text-arch-accent');
+                    link.classList.add('text-arch-text');
+                }
+            });
+        };
+
+        // Projects Filter Logic
+        window.currentProjectCategory = 'all';
+
+        window.filterProjects = function(category, btnElement) {
+            window.currentProjectCategory = category;
+            
+            // Handle Tab Styling
+            if(btnElement) {
+                document.querySelectorAll('.project-tab').forEach(tab => tab.classList.remove('active'));
+                btnElement.classList.add('active');
+            }
+
+            const sections = document.querySelectorAll('.category-section');
+            sections.forEach(sec => {
+                if (category === 'all' || sec.getAttribute('data-category') === category) {
+                    sec.style.display = 'block';
+                    setTimeout(() => {
+                        sec.style.opacity = '1';
+                        sec.style.transform = 'translateY(0)';
+                    }, 50);
+                } else {
+                    sec.style.opacity = '0';
+                    sec.style.transform = 'translateY(20px)';
+                    setTimeout(() => sec.style.display = 'none', 500); 
+                }
             });
 
-            window.addEventListener("resize", updateDimensions);
+            // Ensure Swipers recalculate layout after display change
+            setTimeout(() => {
+                if(window.activeSwipers) {
+                    window.activeSwipers.forEach(s => s.update());
+                }
+                window.updateTabScrollState();
+            }, 100);
 
-            // Initialize
-            updateDimensions();
-            panels[0].classList.add("active");
-            sectionNavItems[0].classList.add("active");
-            startAnimation();
+            // If a specific category is clicked while scrolled down, gently scroll back to top of projects
+            if (category !== 'all' && document.getElementById('project-tabs-wrapper')?.classList.contains('scrolled-tabs')) {
+                document.getElementById('page-projects').scrollIntoView({ behavior: 'smooth' });
+            }
+        };
+
+        window.updateTabScrollState = function() {
+            const projectsPage = document.getElementById('page-projects');
+            const tabsWrapper = document.getElementById('project-tabs-wrapper');
+            const placeholder = document.getElementById('project-tabs-placeholder');
+            
+            if (!projectsPage || !tabsWrapper || !placeholder || !projectsPage.classList.contains('active')) return;
+            
+            if (window.currentProjectCategory === 'all') {
+                const scrollY = window.scrollY;
+                const triggerPoint = placeholder.offsetTop - 50; 
+                
+                if (scrollY > triggerPoint && scrollY > 100) {
+                    if (!tabsWrapper.classList.contains('scrolled-tabs')) {
+                        placeholder.style.height = tabsWrapper.offsetHeight + 'px'; 
+                        tabsWrapper.classList.add('scrolled-tabs');
+                    }
+                } else {
+                    tabsWrapper.classList.remove('scrolled-tabs');
+                    placeholder.style.height = 'auto';
+                }
+            } else {
+                tabsWrapper.classList.remove('scrolled-tabs');
+                placeholder.style.height = 'auto';
+            }
+        };
+
+        document.addEventListener('DOMContentLoaded', () => {
+            
+            if (typeof lucide !== 'undefined') lucide.createIcons();
+
+            // Custom Cursor Logic
+            const cursor = document.getElementById('cursor-main');
+            let mouseX = 0, mouseY = 0, cursorX = 0, cursorY = 0;
+
+            window.addEventListener('mousemove', (e) => {
+                mouseX = e.clientX; mouseY = e.clientY;
+            });
+
+            function animateCursor() {
+                cursorX += (mouseX - cursorX) * 0.15;
+                cursorY += (mouseY - cursorY) * 0.15;
+                if (cursor) cursor.style.transform = `translate(calc(${cursorX}px - 50%), calc(${cursorY}px - 50%))`;
+                requestAnimationFrame(animateCursor);
+            }
+            animateCursor();
+
+            // 3D Background Logic (Three.js) wrapped in Try-Catch
+            try {
+                let scene, camera, renderer, terrain;
+                function initThreeJS() {
+                    const canvas = document.getElementById('hero-canvas');
+                    if (!canvas || typeof THREE === 'undefined') return;
+
+                    scene = new THREE.Scene();
+                    camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+                    renderer = new THREE.WebGLRenderer({ canvas: canvas, alpha: true, antialias: true });
+                    renderer.setSize(window.innerWidth, window.innerHeight);
+                    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+                    const geometry = new THREE.PlaneGeometry(200, 200, 60, 60);
+                    const pos = geometry.attributes.position;
+                    
+                    const material = new THREE.MeshBasicMaterial({ 
+                        color: 0x333333, wireframe: true, transparent: true, opacity: 0.8
+                    });
+                    
+                    terrain = new THREE.Mesh(geometry, material);
+                    terrain.rotation.x = -Math.PI / 2 + 0.2; 
+                    terrain.position.y = -10; terrain.position.z = -30;
+                    scene.add(terrain);
+
+                    camera.position.z = 20; camera.position.y = 5;
+
+                    let targetRotationX = 0, targetRotationY = 0;
+                    
+                    canvas.addEventListener('mousemove', (e) => {
+                        targetRotationY = ((e.clientX / window.innerWidth) - 0.5) * 0.5;
+                        targetRotationX = ((e.clientY / window.innerHeight) - 0.5) * 0.5;
+                    });
+
+                    function animateThree() {
+                        requestAnimationFrame(animateThree);
+                        terrain.rotation.z += 0.0005;
+                        terrain.rotation.y += (targetRotationY - terrain.rotation.y) * 0.05;
+                        terrain.position.y += (targetRotationX * 5 - terrain.position.y - 10) * 0.05;
+
+                        const time = Date.now() * 0.0005;
+                        for (let i = 0; i < pos.count; i++) {
+                            const x = pos.getX(i), y = pos.getY(i);
+                            const z = Math.sin(x * 0.1 + time) * Math.cos(y * 0.1 + time) * 4;
+                            pos.setZ(i, z);
+                        }
+                        pos.needsUpdate = true;
+                        renderer.render(scene, camera);
+                    }
+                    animateThree();
+
+                    window.addEventListener('resize', () => {
+                        camera.aspect = window.innerWidth / window.innerHeight;
+                        camera.updateProjectionMatrix();
+                        renderer.setSize(window.innerWidth, window.innerHeight);
+                    });
+                }
+                initThreeJS();
+            } catch(e) { console.warn("ThreeJS initialization skipped", e); }
+
+            // Swiper Carousels Logic
+            window.activeSwipers = [];
+        window.initSwipers = function() {
+            if(typeof Swiper === 'undefined') return;
+            
+            window.activeSwipers.forEach(s => s.destroy(true, true));
+            window.activeSwipers = [];
+
+            document.querySelectorAll('.category-swiper').forEach(el => {
+                const swiperInstance = new Swiper(el, {
+                    slidesPerView: 'auto',
+                    spaceBetween: -40, // Negative space to create overlap
+                    centeredSlides: true,
+                    grabCursor: true,
+                    loop: true,
+                    speed: 800,
+                    effect: 'coverflow', // Use coverflow for better overlap depth
+                    coverflowEffect: {
+                        rotate: 0,
+                        stretch: 80, // Stretch dictates the overlap amount visually
+                        depth: 200,
+                        modifier: 1,
+                        slideShadows: false, // We use custom blur instead of shadows
+                    },
+                    pagination: {
+                        el: el.querySelector('.swiper-pagination'),
+                        clickable: true,
+                    }
+                });
+                window.activeSwipers.push(swiperInstance);
+            });
+        };
+
+        // Navbar Scroll Effect
+            const navbar = document.getElementById('navbar');
+            window.addEventListener('scroll', () => {
+                if (window.scrollY > 50) {
+                    navbar.classList.add('py-5', 'bg-[#0a0a0a]/80', 'backdrop-blur-xl', 'border-b', 'border-white/5');
+                    navbar.classList.remove('py-8', 'bg-transparent');
+                } else {
+                    navbar.classList.add('py-8', 'bg-transparent');
+                    navbar.classList.remove('py-5', 'bg-[#0a0a0a]/80', 'backdrop-blur-xl', 'border-b', 'border-white/5');
+                }
+            });
+
+            // Mobile Menu
+            const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+            const mobileMenu = document.getElementById('mobile-menu');
+            const menuIcon = mobileMenuBtn ? mobileMenuBtn.querySelector('i') : null;
+            window.isMenuOpen = false;
+
+            window.toggleMenu = function() {
+                window.isMenuOpen = !window.isMenuOpen;
+                if (window.isMenuOpen) {
+                    mobileMenu.classList.remove('opacity-0', 'pointer-events-none');
+                    mobileMenu.classList.add('opacity-100', 'pointer-events-auto');
+                    if(menuIcon && typeof lucide !== 'undefined') {
+                        menuIcon.setAttribute('data-lucide', 'x'); lucide.createIcons();
+                    }
+                } else {
+                    mobileMenu.classList.add('opacity-0', 'pointer-events-none');
+                    mobileMenu.classList.remove('opacity-100', 'pointer-events-auto');
+                    if(menuIcon && typeof lucide !== 'undefined') {
+                        menuIcon.setAttribute('data-lucide', 'menu'); lucide.createIcons();
+                    }
+                }
+            };
+            if(mobileMenuBtn) mobileMenuBtn.addEventListener('click', window.toggleMenu);
+
+            // Intersection Observer
+            let revealObserver;
+            window.initObservers = function() {
+                if (revealObserver) revealObserver.disconnect();
+                const revealElements = document.querySelectorAll('.page-view.active .reveal');
+                
+                revealObserver = new IntersectionObserver((entries, observer) => {
+                    entries.forEach(entry => {
+                        if (entry.isIntersecting) {
+                            entry.target.classList.add('active');
+                            observer.unobserve(entry.target); 
+                        }
+                    });
+                }, { root: null, threshold: 0.1, rootMargin: "0px 0px -50px 0px" });
+
+                revealElements.forEach(el => revealObserver.observe(el));
+            };
+
+            // Interactive Elements logic
+            const addCursorHover = () => document.body.classList.add('cursor-hover');
+            const removeCursorHover = () => document.body.classList.remove('cursor-hover');
+            const addCursorDrag = () => document.body.classList.add('cursor-drag');
+            const removeCursorDrag = () => document.body.classList.remove('cursor-drag');
+
+            window.initInteractiveElements = function() {
+                const interactables = document.querySelectorAll('.page-view.active .cursor-interact, nav .cursor-interact');
+                interactables.forEach(el => {
+                    el.removeEventListener('mouseenter', addCursorHover); el.removeEventListener('mouseleave', removeCursorHover);
+                    el.addEventListener('mouseenter', addCursorHover); el.addEventListener('mouseleave', removeCursorHover);
+                });
+
+                const draggables = document.querySelectorAll('.page-view.active .cursor-drag');
+                draggables.forEach(el => {
+                    el.removeEventListener('mouseenter', addCursorDrag); el.removeEventListener('mouseleave', removeCursorDrag);
+                    el.addEventListener('mouseenter', addCursorDrag); el.addEventListener('mouseleave', removeCursorDrag);
+                });
+
+                const magnetics = document.querySelectorAll('.page-view.active .magnetic, nav .magnetic');
+                magnetics.forEach(btn => {
+                    btn.addEventListener('mousemove', (e) => {
+                        const rect = btn.getBoundingClientRect();
+                        const x = (e.clientX - rect.left - rect.width / 2) * 0.4;
+                        const y = (e.clientY - rect.top - rect.height / 2) * 0.4;
+                        btn.style.transition = 'transform 0.1s ease-out';
+                        btn.style.transform = `translate(${x}px, ${y}px)`;
+                    });
+                    btn.addEventListener('mouseleave', () => {
+                        btn.style.transition = 'transform 0.4s cubic-bezier(0.16, 1, 0.3, 1)';
+                        btn.style.transform = `translate(0px, 0px)`;
+                    });
+                });
+                
+                // Interactive Hero Logo
+                const heroBgLogo = document.getElementById('hero-bg-logo');
+                const homeHero = document.getElementById('home-hero');
+                if (heroBgLogo && homeHero) {
+                    homeHero.addEventListener('mousemove', (e) => {
+                        const x = (e.clientX / window.innerWidth - 0.5) * -40; 
+                        const y = (e.clientY / window.innerHeight - 0.5) * -40;
+                        heroBgLogo.style.transform = `translate(${x}px, ${y}px) rotate(${x*0.1}deg) scale(1.05)`;
+                    });
+                    homeHero.addEventListener('mouseleave', () => {
+                        heroBgLogo.style.transform = `translate(0px, 0px) rotate(0deg) scale(1)`;
+                        heroBgLogo.style.transition = 'transform 0.5s ease-out';
+                    });
+                }
+            };
+
+            // Global Parallax handler
+            window.addEventListener('scroll', () => {
+                const scrolled = window.scrollY;
+                document.querySelectorAll('.page-view.active .parallax-el').forEach(el => {
+                    const speed = el.getAttribute('data-speed') || 0.1;
+                    el.style.transform = `translateY(${scrolled * speed}px)`;
+                });
+                
+                document.querySelectorAll('.page-view.active .parallax-inner').forEach(el => {
+                    const rect = el.parentElement.getBoundingClientRect();
+                    const centerOffset = (rect.top + rect.height/2) - (window.innerHeight/2);
+                    const speed = 0.15;
+                    el.style.transform = `translateY(${centerOffset * speed}px)`;
+                });
+                
+                // Fire tab scroll listener
+                window.updateTabScrollState();
+            });
+
+            // Initial Startup Routine
+            const hash = window.location.hash.replace('#', '') || 'home';
+            const validPages = ['home', 'studio', 'projects', 'expertise', 'team', 'enquire'];
+            const pageToLoad = validPages.includes(hash) ? hash : 'home';
+            
+            window.initInteractiveElements();
+            window.appNavigate(pageToLoad);
+
+            window.addEventListener('popstate', () => {
+                const hash = window.location.hash.replace('#', '') || 'home';
+                window.appNavigate(hash);
+            });
         });
     </script>
 </body>
